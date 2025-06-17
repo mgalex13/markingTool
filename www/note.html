@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notare elev - NFC</title>
+</head>
+<body>
+  <h2>Formular de notare</h2>
+  <p id="status">Verificare autentificare...</p>
+  <div id="grading" style="display:none">
+    <p><strong>ID student:</strong> <span id="studentID"></span></p>
+    <p><strong>Cont profesor:</strong> <span id="teacherEmail"></span></p>
+    <p>Selectează nota:</p>
+    <button onclick="sendGrade(1)">1</button>
+    <button onclick="sendGrade(2)">2</button>
+    <button onclick="sendGrade(3)">3</button>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const studentID = params.get("student") || "NEDEFINIT";
+    document.getElementById("studentID").textContent = studentID;
+
+    let teacherEmail = "";
+
+    fetch("https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec?check=1")
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === "ok") {
+          teacherEmail = data.email;
+          document.getElementById("teacherEmail").textContent = teacherEmail;
+          document.getElementById("grading").style.display = "block";
+          document.getElementById("status").style.display = "none";
+        } else {
+          document.getElementById("status").textContent = "Acces restricționat: autentificare eșuată.";
+        }
+      });
+
+    function sendGrade(nota) {
+      fetch("https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: studentID,
+          nota: nota,
+          teacher: teacherEmail,
+          timestamp: new Date().toISOString()
+        })
+      }).then(res => res.text())
+        .then(txt => alert("Notă trimisă: " + nota))
+        .catch(err => alert("Eroare trimitere: " + err));
+    }
+  </script>
+</body>
+</html>
